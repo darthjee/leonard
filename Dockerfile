@@ -6,6 +6,8 @@ RUN useradd -u 1000 app; \
 
 WORKDIR /home/app/app
 
+COPY Gemfile /home/app/app/
+
 RUN curl -sL https://deb.nodesource.com/setup_10.x | /bin/bash
 RUN apt-get update && apt-get install -y netcat nodejs
 
