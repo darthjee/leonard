@@ -1,0 +1,57 @@
+version: '3'
+services:
+  leonard_postgres:
+    image: postgres:9.5
+    container_name: leonard_postgres
+    env_file: .env
+    environment:
+      POSTGRES_USER: leonard
+      POSTGRES_PASSWORD: leonard
+    ports:
+      - 127.0.0.1:$LEONARD_POSTGRES_PORT:5432
+
+  #################### Base  ####################
+
+  base: &base
+    build:
+      context: application
+      dockerfile: ../Dockerfile
+    volumes:
+      - ./application:/home/app/app
+    links:
+      - leonard_postgres:postgres
+    env_file: .env
+
+
+  base_build:
+    <<: *base
+    build: .
+    command: echo done
+
+  #################### CONTAINERS ####################
+
+  leonard_app:
+    <<: *base
+    container_name: leonard_app
+    command: /bin/bash bin/server.sh
+    depends_on: [base_build]
+    ports:
+      - 127.0.0.1:3000:3000
+    environment:
+      - RAILS_ENV=development
+      - LEONARD_POSTGRES_PORT=5432
+
+  leonard_tests:
+    <<: *base
+    container_name: leonard_tests
+    command: /bin/bash bin/tests.sh
+    depends_on: [base_build]
+    environment:
+      - RAILS_ENV=test
+
+  leonard_root:
+    <<: *base
+    user: root
+    container_name: leonard_root
+    command: /bin/bash
+    depends_on: [base_build]
